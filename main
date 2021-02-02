@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+#importing statements
+import praw
+#import pandas as pd
+#import datetime as dt
+from textblob import TextBlob  #, Word, Blobber
+#from textblob.classifiers import NaiveBayesClassifier
+#from textblob.taggers import NLTKTagger
+#import sys
+#import math
+import csv
+#import numpy as np
+#import sklearn
+#from sklearn.preprocessing import MinMaxScaler
+#from sklearn.cluter import KMeans
+#from sklearn import metrics
+#from matplotlib import pyplot as plt
+#import nltk
+import os
+
+
+#pass authentication information via arguments to praw.Reddit()
+#To create a read-only Reddit instance, you need three pieces of information: Client ID, Client secret and User agent
+
+reddit = praw.Reddit(
+    client_id='bznmfW7Jo7-Cqw',
+    client_secret='5rDO-N_gVuUQMLLp-s_N_xzgRZ8',
+    user_agent='MyExampleApp',
+    username='Minetest22',
+    password='Napier123')
+
+reddit.read_only = True
+#print(reddit.read_only)
+
+Subreddit = input("Please enter the name of a subreddit \n")
+subreddit = reddit.subreddit(Subreddit)
+Limit = int(input("How many entries would you like displayed (number)\n"))
+Sort_By = input(
+    "which would you like to sort by: hot/new/top/controversial/rising \n")
+
+#initialise variables
+sub_sentiment = 0
+num_comments = 0
+title_array = []
+id_array = []
+upvotes_array = []
+comment_body_array = []
+comment_sentiment_array = []
+comment_length_array = []
+comment_upvotes_array = []
+My_data = ""
+i = 1
+array_length = 0
+
+
+
+#code bellow repeated for the different sorts
+#comments will only be on "hot" as there are too many
+
+if Sort_By == "hot":
+    #With a read-only instance, you can do something like obtaining “hot” submissions from subreddit
+    for submission in subreddit.hot(limit=Limit):
+        title_array.append(submission.title)
+        id_array.append(submission.id + '\n')
+        upvotes_array.append(str(submission.score))
+        #gets top-level comments
+        submission.comments.replace_more(limit=0)
+        for comment in submission.comments.list():
+          #gets bottom-level comments
+            array_length += 1
+            comment_body_array.append(comment.body)
+            comment_length_array.append(len(comment.body))
+            blob = TextBlob(comment.body)
+            comment_upvotes_array.append(comment.score)
+            comment_sentiment = blob.sentiment.polarity
+            comment_sentiment_array.append(str(comment_sentiment))
+            sub_sentiment += comment_sentiment
+            num_comments += 1
+            #write some data to the CSV file
+            csv_file = "data.csv"
+            # ouputs column headings
+            csv_columns = ["Upvotes", "Sentiment", "Length"]
+            with open(csv_file, 'w') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+                writer.writeheader()
+            for i in range(array_length):
+              #writes each line out to the CSV file
+                my_dict = {
+                    "Upvotes": comment_upvotes_array[i],
+                    "Sentiment": comment_sentiment_array[i],
+                    "Length": comment_length_array[i]
+                }
+                with open(csv_file, 'a') as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+                    writer.writerow(my_dict)
+
+
+
+if Sort_By == "top":
+    for submission in subreddit.top(limit=Limit):
+        title_array.append(submission.title)
+        id_array.append(submission.id + '\n')
+        upvotes_array.append(str(submission.score))
+        submission.comments.replace_more(limit=0)
+        for comment in submission.comments.list():
+            array_length += 1
+            comment_body_array.append(comment.body)
+            comment_length_array.append(len(comment.body))
+            blob = TextBlob(comment.body)
+            comment_upvotes_array.append(comment.score)
+            comment_sentiment = blob.sentiment.polarity
+            comment_sentiment_array.append(str(comment_sentiment))
+            sub_sentiment += comment_sentiment
+            num_comments += 1
+
+            csv_file = "data.csv"
+            csv_columns = ["Upvotes", "Sentiment", "Length"]
+            with open(csv_file, 'w') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+                writer.writeheader()
+            for i in range(array_length):
+                my_dict = {
+                    "Upvotes": comment_upvotes_array[i],
+                    "Sentiment": comment_sentiment_array[i],
+                    "Length": comment_length_array[i]
+                }
+                with open(csv_file, 'a') as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+                    writer.writerow(my_dict)
+
+if Sort_By == "new":
+    for submission in subreddit.new(limit=Limit):
+        title_array.append(submission.title)
+        id_array.append(submission.id + '\n')
+        upvotes_array.append(str(submission.score))
+        submission.comments.replace_more(limit=0)
+        for comment in submission.comments.list():
+            array_length += 1
+            comment_body_array.append(comment.body)
+            comment_length_array.append(len(comment.body))
+            blob = TextBlob(comment.body)
+            comment_upvotes_array.append(comment.score)
+            comment_sentiment = blob.sentiment.polarity
+            comment_sentiment_array.append(str(comment_sentiment))
+            sub_sentiment += comment_sentiment
+            num_comments += 1
+
+            csv_file = "data.csv"
+            csv_columns = ["Upvotes", "Sentiment", "Length"]
+            with open(csv_file, 'w') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+                writer.writeheader()
+            for i in range(array_length):
+                my_dict = {
+                    "Upvotes": comment_upvotes_array[i],
+                    "Sentiment": comment_sentiment_array[i],
+                    "Length": comment_length_array[i]
+                }
+                with open(csv_file, 'a') as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+                    writer.writerow(my_dict)
+
+if Sort_By == "controversial":
+    for submission in subreddit.controversial(limit=Limit):
+        title_array.append(submission.title)
+        id_array.append(submission.id + '\n')
+        upvotes_array.append(str(submission.score))
+        submission.comments.replace_more(limit=0)
+        for comment in submission.comments.list():
+            array_length += 1
+            comment_body_array.append(comment.body)
+            comment_length_array.append(len(comment.body))
+            blob = TextBlob(comment.body)
+            comment_upvotes_array.append(comment.score)
+            comment_sentiment = blob.sentiment.polarity
+            comment_sentiment_array.append(str(comment_sentiment))
+            sub_sentiment += comment_sentiment
+            num_comments += 1
+
+            csv_file = "data.csv"
+            csv_columns = ["Upvotes", "Sentiment", "Length"]
+            with open(csv_file, 'w') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+                writer.writeheader()
+            for i in range(array_length):
+                my_dict = {
+                    "Upvotes": comment_upvotes_array[i],
+                    "Sentiment": comment_sentiment_array[i],
+                    "Length": comment_length_array[i]
+                }
+                with open(csv_file, 'a') as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+                    writer.writerow(my_dict)
+
+if Sort_By == "rising":
+    for submission in subreddit.rising(limit=Limit):
+        title_array.append(submission.title)
+        id_array.append(submission.id + '\n')
+        upvotes_array.append(str(submission.score))
+        submission.comments.replace_more(limit=0)
+        for comment in submission.comments.list():
+            array_length += 1
+            comment_body_array.append(comment.body)
+            comment_length_array.append(len(comment.body))
+            blob = TextBlob(comment.body)
+            comment_upvotes_array.append(comment.score)
+            comment_sentiment = blob.sentiment.polarity
+            comment_sentiment_array.append(str(comment_sentiment))
+            sub_sentiment += comment_sentiment
+            num_comments += 1
+
+            csv_file = "data.csv"
+            csv_columns = ["Upvotes", "Sentiment", "Length"]
+            with open(csv_file, 'w') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+                writer.writeheader()
+            for i in range(array_length):
+                my_dict = {
+                    "Upvotes": comment_upvotes_array[i],
+                    "Sentiment": comment_sentiment_array[i],
+                    "Length": comment_length_array[i]
+                }
+                with open(csv_file, 'a') as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+                    writer.writerow(my_dict)
+
+
+#what algorithm should be run
+NextSteps = input("Do you want to run K-Means or DBscan or Birch \n")
+if NextSteps == "K-Means":
+    #moves to the file and starts 
+    os.system('python Kmeans.py')
+
+if NextSteps == "DBscan":
+    #moves to the file and starts 
+    os.system('python dbscan.py')
+
+if NextSteps == "Birch":
+    #moves to the file and starts 
+    os.system('python Birch.py')
