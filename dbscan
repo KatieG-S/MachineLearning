@@ -1,0 +1,110 @@
+#import statements
+import numpy as np
+import pandas as pd
+import sys
+from sklearn import linear_model
+from sklearn.model_selection import train_test_split
+from sklearn.cluster import DBSCAN
+from sklearn.datasets import make_classification  
+from sklearn.metrics import roc_auc_score 
+from sklearn.metrics import roc_curve 
+import matplotlib.pyplot as plt 
+import time
+
+
+#timestamp at beggining of file to be used to work out total time of this algorthm
+tic = time.perf_counter()
+
+#data brought in from CSV file
+ver=pd.read_csv("data.csv")
+
+#split data set into 80% training
+train, test, y_train, y_test = train_test_split(ver[["Upvotes", "Sentiment", "Length"]], ver["Sentiment"], test_size=0.8, random_state=1)
+
+#set algorithm as: 
+model= DBSCAN(eps=3, min_samples=10)
+
+model.fit(train,y_train)
+
+predictions =model.fit_predict(test)
+
+print ('%22s %s %s %s' % ("Pred","Actual","Diff","Success"))
+
+#reset values to original state
+success = 0
+failure = 0
+
+#define what is considered a success or failure
+for x in range(0, len(predictions)):
+  error =  abs(int(predictions[x])-ver["Sentiment"][x])
+  if (error<=1):
+    str = "Success"
+    success=success+1
+  else:
+    str="Failed!"
+    failure = failure+1
+  print('%4d %4d %4d %s' % (int(predictions[x]),ver["Sentiment"][x],error,str) )
+
+print ('Success: %3d Fail: %3d' % (success,failure))
+
+#ROC curve functiony thing
+def show_roc(FPR, TPR, AUC):  
+    plt.plot(FPR, TPR, color='blue', label='ROC')
+    plt.plot([0, 1], [0, 1], color='darkblue', linestyle='--')
+    plt.xlabel('FPR')
+    plt.ylabel('TPR')
+    plt.title('Receiver Operating Characteristic (ROC) Curve')
+    plt.legend(["AUC=%.3f" % AUC])
+    plt.show()
+
+data_vals, class_label =make_classification(n_samples=100,n_features=2, n_redundant=0, n_informative=1,n_clusters_per_class=1)
+
+
+#split data set into 20% to test the algorithm
+X_train, X_test, y_train, y_test = train_test_split(data_vals, class_label, test_size=0.3, random_state=1) 
+
+#specifying the model to be used again? IDK why but it works
+model = DBSCAN() 
+
+model.fit(X_train, y_train)  
+
+y_predict = model.fit_predict(X_test) 
+
+#not using model score because i dont know how to improve it 
+#print ("Model score: ",model.score(X_test, y_test))
+
+
+# probablities of getting a 1
+#y_predict = y_predict[:, 1]  
+
+auc = roc_auc_score(y_test, y_predict)  
+
+FPR, TPR, thresholds = roc_curve(y_test, y_predict) 
+
+print ("Thresholds: ",thresholds)
+print ("FPR: ",FPR)
+print ("TPR: ",TPR)
+
+#timestamp at end  of file to be used to work out total time of this algorthm
+toc = time.perf_counter()
+#take time at end of file from time at beginning of file in order to get the time taken. 
+print(f"Algorithm ran in {toc - tic:0.4f} seconds")
+
+
+#comemnt and uncomment the following lines as necessary. If ROC curves or scatter plots are required.  
+#show_roc(FPR, TPR,auc) 
+
+"""
+#didnt work :(
+plt.scatter(X["Length"],X["Upvotes"],c='black')
+plt.scatter(Centroids["Length"],Centroids["Upvotes"],c='red')
+plt.xlabel('Length')
+plt.ylabel('Upvotes')
+plt.show()
+#trying below instead
+"""
+
+plt.scatter(data_vals[:, 0], data_vals[:, 1], marker='o', c=class_label,s=25, edgecolor='k')
+
+plt.show() 
+ 
